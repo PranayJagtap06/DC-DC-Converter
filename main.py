@@ -1,17 +1,38 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat May 28 10:07:00 2022
+
+@author: pranayjagtap
+"""
+
 """ConverterCalc is a simple calculator for dc-dc converter built using Python and PyQt5."""
 
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QLabel, QWidget, QScrollArea
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QPushButton,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLineEdit,
+    QComboBox,
+    QLabel,
+    QWidget,
+    QScrollArea,
+)
 from ConverterPackage import bucklc, boostlc, bckbstlc
 import numpy as np
+
 Hist_list = []
-file = open('file_history.txt', 'a+')
+file = open("file_history.txt", "a+")
 file.close()
 
 
 class ConverterCalcUi(QMainWindow):
     """Mainwindow."""
+
     switch_window = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -26,21 +47,21 @@ class ConverterCalcUi(QMainWindow):
         self._centralWidget = QWidget(self)
         self.setCentralWidget(self._centralWidget)
 
-        font_ = QtGui.QFont("Times", 10)
+        font_ = QtGui.QFont("Times", 12)
 
         mode_lay = QHBoxLayout()
-        self.mode_label = QLabel('Converter Type')
+        self.mode_label = QLabel("Converter Type")
         self.mode_label.setFont(font_)
         self.mode_ = QComboBox()
         self.mode_.setFont(font_)
-        self.mode_.addItems(['--Select Type--', 'boost', 'buck', 'buckboost'])
+        self.mode_.addItems(["--Select Type--", "boost", "buck", "buckboost"])
         mode_lay.addWidget(self.mode_label)
         mode_lay.addWidget(self.mode_)
         mode_lay.setAlignment(QtCore.Qt.AlignLeft)
         mode_lay.setSpacing(164)
 
         Vin_lay = QHBoxLayout()
-        Vin_label = QLabel('Input Volatge(Vin)')
+        Vin_label = QLabel("Input Volatge(Vin)")
         Vin_label.setFont(font_)
         self.Vin = QLineEdit()
         self.Vin.setFixedWidth(150)
@@ -52,7 +73,7 @@ class ConverterCalcUi(QMainWindow):
         Vin_lay.addStretch(0)
 
         Vo_lay = QHBoxLayout(parent)
-        self.Vo_label = QLabel('Output Volatge(Vo)')
+        self.Vo_label = QLabel("Output Volatge(Vo)")
         self.Vo_label.setFont(font_)
         self.Vo = QLineEdit()
         self.Vo.setFixedWidth(150)
@@ -60,23 +81,23 @@ class ConverterCalcUi(QMainWindow):
         self.Vo.setValidator(QtGui.QDoubleValidator())
         Vo_lay.addWidget(self.Vo_label)
         Vo_lay.addWidget(self.Vo)
-        Vo_lay.setSpacing(136)
+        Vo_lay.setSpacing(137)
         Vo_lay.addStretch(0)
 
-        Rin_lay = QHBoxLayout()
-        self.Rin_label = QLabel('Output Resistance(Ro)')
-        self.Rin_label.setFont(font_)
-        self.Rin = QLineEdit()
-        self.Rin.setFixedWidth(150)
-        self.Rin.setFont(font_)
-        self.Rin.setValidator(QtGui.QDoubleValidator())
-        Rin_lay.addWidget(self.Rin_label)
-        Rin_lay.addWidget(self.Rin)
-        Rin_lay.setSpacing(110)
-        Rin_lay.addStretch(0)
+        Ro_lay = QHBoxLayout()
+        self.Ro_label = QLabel("Output Resistance(Ro)")
+        self.Ro_label.setFont(font_)
+        self.Ro = QLineEdit()
+        self.Ro.setFixedWidth(150)
+        self.Ro.setFont(font_)
+        self.Ro.setValidator(QtGui.QDoubleValidator())
+        Ro_lay.addWidget(self.Ro_label)
+        Ro_lay.addWidget(self.Ro)
+        Ro_lay.setSpacing(120)
+        Ro_lay.addStretch(0)
 
         fsw_lay = QHBoxLayout()
-        self.fsw_label = QLabel('Frequency(f)\n(in Hz)')
+        self.fsw_label = QLabel("Frequency(f) (in Hz)")
         self.fsw_label.setFont(font_)
         self.fsw = QLineEdit()
         self.fsw.setFixedWidth(150)
@@ -84,11 +105,11 @@ class ConverterCalcUi(QMainWindow):
         self.fsw.setValidator(QtGui.QDoubleValidator())
         fsw_lay.addWidget(self.fsw_label)
         fsw_lay.addWidget(self.fsw)
-        fsw_lay.setSpacing(185)
+        fsw_lay.setSpacing(133)
         fsw_lay.addStretch(0)
 
         Irp_lay = QHBoxLayout()
-        self.Irp_label = QLabel('Percentage i/p Ripple Current(Ir)')
+        self.Irp_label = QLabel("Percentage i/p Ripple Current(Ir)(optional)\nEg.: 40")
         self.Irp_label.setFont(font_)
         self.Irp = QLineEdit()
         self.Irp.setFixedWidth(150)
@@ -96,11 +117,12 @@ class ConverterCalcUi(QMainWindow):
         self.Irp.setValidator(QtGui.QDoubleValidator())
         Irp_lay.addWidget(self.Irp_label)
         Irp_lay.addWidget(self.Irp)
-        Irp_lay.setSpacing(35)
+        Irp_lay.setSpacing(55)
         Irp_lay.addStretch(0)
+        self.Irp.setText("0")
 
         Vrp_lay = QHBoxLayout()
-        self.Vrp_label = QLabel('Percentage o/p Ripple Volatge(Vr)')
+        self.Vrp_label = QLabel("Percentage o/p Ripple Volatge(Vr)\nEg.: 3")
         self.Vrp_label.setFont(font_)
         self.Vrp = QLineEdit()
         self.Vrp.setFixedWidth(150)
@@ -108,18 +130,18 @@ class ConverterCalcUi(QMainWindow):
         self.Vrp.setValidator(QtGui.QDoubleValidator())
         Vrp_lay.addWidget(self.Vrp_label)
         Vrp_lay.addWidget(self.Vrp)
-        Vrp_lay.setSpacing(25)
+        Vrp_lay.setSpacing(45)
         Vrp_lay.addStretch(0)
 
         PB_lay = QHBoxLayout()
-        self.calc = QPushButton('Calculate')
-        self.calc.setStyleSheet('background-color: blue')
+        self.calc = QPushButton("Calculate")
+        self.calc.setStyleSheet("background-color: blue")
         self.calc.setFont(font_)
-        self.clear = QPushButton('Clear')
-        self.clear.setStyleSheet('background-color: red')
+        self.clear = QPushButton("Clear")
+        self.clear.setStyleSheet("background-color: red")
         self.clear.setFont(font_)
-        self.label = ''
-        self.hist_list = ''
+        self.label = ""
+        self.hist_list = ""
         self.calcResult = ScrollLabel(self)
 
         PB_lay.addWidget(self.calc)
@@ -133,7 +155,7 @@ class ConverterCalcUi(QMainWindow):
         self.outerLayout.addLayout(mode_lay)
         self.outerLayout.addLayout(Vin_lay)
         self.outerLayout.addLayout(Vo_lay)
-        self.outerLayout.addLayout(Rin_lay)
+        self.outerLayout.addLayout(Ro_lay)
         self.outerLayout.addLayout(fsw_lay)
         self.outerLayout.addLayout(Irp_lay)
         self.outerLayout.addLayout(Vrp_lay)
@@ -152,34 +174,67 @@ class ConverterCalcUi(QMainWindow):
         self.menu.addAction("&Clear History", self.ClearHist)
 
     def labelText(self, l_):
-        duty, op_current, ip_current, i_ripple, Ind_cr, Ind, Ind_cr_ripple, max_indI, min_indI, cap = l_
+        (
+            duty,
+            Pi,
+            Po,
+            op_current,
+            Ind_current,
+            ip_current,
+            i_ripple,
+            Ind_cr,
+            Ind,
+            Ind_cr_ripple,
+            max_indI,
+            min_indI,
+            cap,
+            esr,
+        ) = l_
         txt1 = "Converter Paramerters:\n\tDuty Cycle = {}\n".format(duty)
+        txt_I = "\tPower Input = {}W\n".format(Pi)
+        txt_O = "\tPower Output = {}W\n".format(Po)
         txt2 = "\tOutput Current = {}Amp\n".format(op_current)
-        txt3 = "\tInput Current = {}Amp\n".format(ip_current)
-        txt4 = "\tRipple Current = {}Amp\n".format(i_ripple)
-        txt5 = "\tCritical Inductance(Lcr) = {}H\n".format(Ind_cr)
-        txt6 = "\tInductance(L) as per calculated ripple current = {}H\n".format(
-            Ind)
-        txt7 = "\tRipple Current due to Lcr = {}Amp\n".format(Ind_cr_ripple)
-        txt8 = "\tMaximum inductor ripple current = {}Amp\n".format(max_indI)
-        txt9 = "\tMinimum inductor ripple current = {}Amp\n".format(min_indI)
-        txt10 = "\tOutput Capacitor = {}F".format(cap)
-        txt_ = txt1 + txt2 + txt3 + txt4 + txt5 + txt6 + txt7 + txt8 + txt9 + txt10
+        txt3 = "\tInductor Current = {}Amp\n".format(Ind_current)
+        txt4 = "\tInput Current = {}Amp\n".format(ip_current)
+        txt5 = "\tRipple Current = {}Amp\n".format(i_ripple)
+        txt6 = "\tCritical Inductance(Lcr) = {}H\n".format(Ind_cr)
+        txt7 = "\tInductance(L) as per calculated ripple current = {}H\n".format(Ind)
+        txt8 = "\tRipple Current due to Lcr = {}Amp\n".format(Ind_cr_ripple)
+        txt9 = "\tMaximum inductor ripple current = {}Amp\n".format(max_indI)
+        txt10 = "\tMinimum inductor ripple current = {}Amp\n".format(min_indI)
+        txt11 = "\tOutput Capacitor = {}F\n".format(cap)
+        txt12 = "\tCapacitor ESR = {}Ohms".format(esr)
+        txt_ = (
+            txt1
+            + txt_I
+            + txt_O
+            + txt2
+            + txt3
+            + txt4
+            + txt5
+            + txt6
+            + txt7
+            + txt8
+            + txt9
+            + txt10
+            + txt11
+            + txt12
+        )
         self.label = txt_
         self.calcResult.setText(txt_)
 
     def hist_params(self):
         Mode, Vin, Vo, R, fsw, Irp, Vrp = self.onIpEdit()
-        txt11 = "Converter Mode = {}\n".format(Mode)
-        txt12 = "\tVin = {}\n".format(Vin)
-        txt13 = "\tVo = {}\n".format(Vo)
-        txt14 = "\tRo = {}\n".format(R)
-        txt15 = "\tfsw = {}\n".format(fsw)
-        txt16 = "\tIrp = {}\n".format(Irp)
-        txt17 = "\tVrp = {}\n".format(Vrp)
-        txt_ip = txt11+txt12+txt13+txt14+txt15+txt16+txt17
+        txt13 = "Converter Mode = {}\n".format(Mode)
+        txt14 = "\tVin = {}\n".format(Vin)
+        txt15 = "\tVo = {}\n".format(Vo)
+        txt16 = "\tRo = {}\n".format(R)
+        txt17 = "\tfsw = {}\n".format(fsw)
+        txt18 = "\tIrp = {}\n".format(Irp)
+        txt19 = "\tVrp = {}\n".format(Vrp)
+        txt_ip = txt13 + txt14 + txt15 + txt16 + txt17 + txt18 + txt19
         hist_params = txt_ip + self.label + "\n\n\n"
-        hist_file = open('file_history.txt', 'a+')
+        hist_file = open("file_history.txt", "a+")
         hist_file.write(hist_params)
         hist_file.close()
 
@@ -187,10 +242,10 @@ class ConverterCalcUi(QMainWindow):
         l = list()
         st = 0
         nd = 20
-        txt = ''
-        file = open('file_history.txt', 'r')
+        txt = ""
+        file = open("file_history.txt", "r")
         f = file.readlines()
-        file. close()
+        file.close()
         for _ in range(len(f)):
             if st == len(f):
                 break
@@ -199,21 +254,21 @@ class ConverterCalcUi(QMainWindow):
             nd += 20
         L = l[::-1]
         for x in range(len(L)):
-            txt += ''. join(L[x])
+            txt += "".join(L[x])
         self.hist_list = txt
 
     def errorLabel(self, text):
-        self.label = text
+        self.calcResult.setText(text)
 
     def clearLabel(self):
-        self.calcResult.setText('')
+        self.calcResult.setText("")
         self.mode_.setCurrentIndex(0)
-        self.Vin.setText('')
-        self.Vo.setText('')
-        self.Rin.setText('')
-        self.fsw.setText('')
-        self.Irp.setText('')
-        self.Vrp.setText('')
+        self.Vin.setText("")
+        self.Vo.setText("")
+        self.Ro.setText("")
+        self.fsw.setText("")
+        self.Irp.setText("0")
+        self.Vrp.setText("")
 
     def _signals(self):
         self.calc.clicked.connect(self.evaluateResults)
@@ -221,70 +276,130 @@ class ConverterCalcUi(QMainWindow):
         self.clear.clicked.connect(self.clearLabel)
 
     def onIpEdit(self):
-        mode = str(self.mode_.currentText())
-        vin = float(self.Vin.text())
-        vo = float(self.Vo.text())
-        r = float(self.Rin.text())
-        Fsw = float(self.fsw.text())
-        irp = float(self.Irp.text())
-        vrp = float(self.Vrp.text())
-        ip = [mode, vin, vo, r, Fsw, irp, vrp]
-        return ip
+        try:
+            mode = str(self.mode_.currentText())
+            vin = float(self.Vin.text())
+            vo = float(self.Vo.text())
+            r = float(self.Ro.text())
+            Fsw = float(self.fsw.text())
+            irp = float(self.Irp.text())
+            vrp = float(self.Vrp.text())
+        except ValueError:
+            self.errorLabel(
+                "Inappropriate block values. Block values must be of type Float.\nRetry!"
+            )
+        finally:
+            ip = [mode, vin, vo, r, Fsw, irp, vrp]
+            return ip
 
     def evaluateResults(self):
         Mode, Vin, Vo, R, fsw, Irp, Vrp = self.onIpEdit()
-        try:
-            if Mode == 'boost':
-                duty_ = boostlc.bst_duty_cycle(Vo, Vin)
-                output_current = np.round(np.divide(Vo, R), decimals=2)
-                input_current = boostlc.bst_ind_current(duty_, output_current)
-                I_ripple = boostlc.bst_ripl_current(input_current, Irp)
-                ind_cr = boostlc.bst_cr_ind(duty_, R, fsw)
+        if Mode == "boost":
+            duty_ = boostlc.bst_duty_cycle(Vo, Vin)
+            output_current = np.round(np.divide(Vo, R), decimals=2)
+            ind_current = boostlc.bst_ind_current(duty_, output_current)
+            input_current = ind_current
+            ind_cr = boostlc.bst_cr_ind(duty_, R, fsw)
+            if Irp != 0:
+                I_ripple = boostlc.bst_ripl_current(ind_current, Irp)
                 ind_ = boostlc.bst_cont_ind(Vin, duty_, fsw, I_ripple)
-                ind_cr_ripple = boostlc.bst_ind_ripl_(Vin, duty_, fsw, ind_cr)
-                max_indcrnt = np.round(
-                    np.add(float(input_current), float(I_ripple)/2), decimals=2)
-                min_indcrnt = np.round(np.subtract(
-                    float(input_current), float(I_ripple)/2), decimals=2)
-                capacitor = boostlc.bst_cap_val(Vo, duty_, R, Vrp, fsw)
-            elif Mode == 'buck':
-                duty_ = bucklc.bck_duty_cycle(Vo, Vin)
-                output_current = np.round(np.divide(Vo, R), decimals=2)
-                input_current = bucklc.bck_ind_current(duty_, output_current)
-                I_ripple = bucklc.bck_ripl_current(input_current, Irp)
-                ind_cr = bucklc.bck_cr_ind(duty_, R, fsw)
+            else:
+                ind_ = np.format_float_scientific(
+                    np.multiply(float(ind_cr), 1.25),
+                    unique=False,
+                    precision=4,
+                    trim="-",
+                    exp_digits=1,
+                )
+                I_ripple = boostlc.bst_Irp(Vin, duty_, fsw, ind_)
+            ind_cr_ripple = boostlc.bst_ind_ripl_(Vin, duty_, fsw, ind_cr)
+            max_indcrnt = np.round(
+                np.add(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            min_indcrnt = np.round(
+                np.subtract(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            capacitor = boostlc.bst_cap_val(duty_, R, Vrp, fsw)
+            Esr = boostlc.Esr(Vrp, Vo, I_ripple)
+        elif Mode == "buck":
+            duty_ = bucklc.bck_duty_cycle(Vo, Vin)
+            output_current = np.round(np.divide(Vo, R), decimals=2)
+            ind_current = output_current
+            input_current = bucklc.bck_ip_current(duty_, output_current)
+            ind_cr = bucklc.bck_cr_ind(duty_, R, fsw)
+            if Irp != 0:
+                I_ripple = bucklc.bck_ripl_current(ind_current, Irp)
                 ind_ = bucklc.bck_cont_ind(Vo, duty_, fsw, I_ripple)
-                ind_cr_ripple = bucklc.bck_ind_ripl_(Vo, duty_, fsw, ind_cr)
-                max_indcrnt = np.round(
-                    np.add(float(input_current), float(I_ripple)/2), decimals=2)
-                min_indcrnt = np.round(np.subtract(
-                    float(input_current), float(I_ripple)/2), decimals=2)
-                capacitor = bucklc.bck_cap_val(Vo, duty_, R, Vrp, fsw)
-            elif Mode == 'buckboost':
-                duty_ = bckbstlc.bckbst_duty_cycle(Vo, Vin)
-                output_current = np.round(np.divide(Vo, R), decimals=2)
-                input_current = bckbstlc.bckbst_ind_current(
-                    duty_, output_current)
+            else:
+                ind_ = np.format_float_scientific(
+                    np.multiply(float(ind_cr), 1.25),
+                    unique=False,
+                    precision=4,
+                    trim="-",
+                    exp_digits=1,
+                )
+                I_ripple = bucklc.bck_Irp(Vo, duty_, fsw, ind_)
+            ind_cr_ripple = bucklc.bck_ind_ripl_(Vo, duty_, fsw, ind_cr)
+            max_indcrnt = np.round(
+                np.add(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            min_indcrnt = np.round(
+                np.subtract(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            capacitor = bucklc.bck_cap_val(duty_, ind_, Vrp, fsw)
+            Esr = bucklc.Esr(Vrp, Vo, I_ripple)
+        elif Mode == "buckboost":
+            duty_ = bckbstlc.bckbst_duty_cycle(Vo, Vin)
+            output_current = np.round(np.divide(Vo, R), decimals=2)
+            ind_current = bckbstlc.bckbst_ind_current(duty_, output_current)
+            input_current = np.round(np.multiply(ind_current, duty_), decimals=3)
+            ind_cr = bckbstlc.bckbst_cr_ind(duty_, R, fsw)
+            if Irp != 0:
                 I_ripple = bckbstlc.bckbst_ripl_current(input_current, Irp)
-                ind_cr = bckbstlc.bckbst_cr_ind(duty_, R, fsw)
                 ind_ = bckbstlc.bckbst_cont_ind(Vin, duty_, fsw, I_ripple)
-                ind_cr_ripple = bckbstlc.bckbst_ind_ripl_(
-                    Vin, duty_, fsw, ind_cr)
-                max_indcrnt = np.round(
-                    np.add(float(input_current), float(I_ripple)/2), decimals=2)
-                min_indcrnt = np.round(np.subtract(
-                    float(input_current), float(I_ripple)/2), decimals=2)
-                capacitor = bckbstlc.bckbst_cap_val(Vo, duty_, R, Vrp, fsw)
+            else:
+                ind_ = np.format_float_scientific(
+                    np.multiply(float(ind_cr), 1.25),
+                    unique=False,
+                    precision=4,
+                    trim="-",
+                    exp_digits=1,
+                )
+                I_ripple = bckbstlc.bckbst_Irp(Vin, duty_, fsw, ind_)
+            ind_cr_ripple = bckbstlc.bckbst_ind_ripl_(Vin, duty_, fsw, ind_cr)
+            max_indcrnt = np.round(
+                np.add(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            min_indcrnt = np.round(
+                np.subtract(float(ind_current), float(I_ripple) / 2), decimals=2
+            )
+            capacitor = bckbstlc.bckbst_cap_val(duty_, R, Vrp, fsw)
+            Esr = bckbstlc.Esr(Vrp, Vo, I_ripple)
+        elif Mode == "--Select Type--":
+            self.errorLabel("Converter type not selected!")
+        power_in = np.multiply(Vin, input_current)
+        power_out = np.multiply(Vo, output_current)
 
-        except Exception:
-            msg = 'ERROR_MSG'
-            self.errorLabel(msg)
-        params = [duty_, output_current, input_current, I_ripple, ind_cr,
-                  ind_, ind_cr_ripple, max_indcrnt, min_indcrnt, capacitor]
+        params = [
+            duty_,
+            power_in,
+            power_out,
+            output_current,
+            ind_current,
+            input_current,
+            I_ripple,
+            ind_cr,
+            ind_,
+            ind_cr_ripple,
+            max_indcrnt,
+            min_indcrnt,
+            capacitor,
+            Esr,
+        ]
         self.labelText(l_=params)
 
     def ClearHist(self):
-        hist_file = open('file_history.txt', 'r+')
+        hist_file = open("file_history.txt", "r+")
         hist_file.truncate(0)
 
     def switch(self):
@@ -296,7 +411,6 @@ class ConverterCalcUi(QMainWindow):
 
 
 class ScrollLabel(QScrollArea):
-
     def __init__(self, *args, **kwargs):
         QScrollArea.__init__(self, *args, **kwargs)
 
@@ -313,7 +427,7 @@ class ScrollLabel(QScrollArea):
         self.label.setText(text)
         font = QtGui.QFont("Georgia", 12)
         self.label.setFont(font)
-        self.label.setStyleSheet('background-color: lightgreen')
+        self.label.setStyleSheet("background-color: lightgreen")
 
 
 class History(QtWidgets.QWidget):
@@ -321,7 +435,7 @@ class History(QtWidgets.QWidget):
 
     def __init__(self, text):
         QtWidgets.QWidget.__init__(self)
-        self.setWindowTitle('Calculator History')
+        self.setWindowTitle("Calculator History")
         self.setGeometry(200, 200, 680, 640)
         hist_lay = QVBoxLayout()
         history = ScrollLabel(self)
@@ -343,11 +457,11 @@ class Login(QtWidgets.QWidget):
 
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
-        self.setWindowTitle('Login')
+        self.setWindowTitle("Login")
         self.setGeometry(200, 200, 680, 640)
         layout = QtWidgets.QGridLayout()
-        self.button = QtWidgets.QPushButton('Login')
-        self.button.setFont(QtGui.QFont('Times', 10))
+        self.button = QtWidgets.QPushButton("Login")
+        self.button.setFont(QtGui.QFont("Times", 10))
         self.button.clicked.connect(self.login)
         layout.addWidget(self.button)
         self.setLayout(layout)
